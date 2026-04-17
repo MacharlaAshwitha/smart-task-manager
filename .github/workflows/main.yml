@@ -1,0 +1,19 @@
+name: Docker Build and Run
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker containers
+        run: docker compose up --build -d
+
+      - name: Stop containers
+        run: docker compose down
