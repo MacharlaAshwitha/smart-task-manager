@@ -17,19 +17,33 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 /*
-  ✅ CORS FIX:
-  Allow both local + deployed frontend
+  ✅ Allowed origins (local + deployed frontend)
+*/
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_ORIGIN,
+];
+
+/*
+  ✅ CORS configuration (secure + flexible)
 */
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://macharlaashwitha.github.io"
-    ],
+    origin: function (origin, callback) {
+      // allow requests with no origin (like Postman / mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
+/*
+  ✅ Middleware
+*/
 app.use(express.json());
 
 /*
@@ -40,7 +54,7 @@ app.get("/api/health", (req, res) => {
 });
 
 /*
-  ✅ Routes
+  ✅ API Routes
 */
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
@@ -70,6 +84,18 @@ async function start() {
     if (!process.env.JWT_SECRET) {
       console.warn(
         "⚠️ WARNING: JWT_SECRET is not set. Auth may fail."
+      );
+    }
+
+    if (!process.env.MONGO_URI) {
+      console.warn(
+        "⚠️ WARNING: MONGO_URI is not set. DB connection may fail."
+      );
+    }
+
+    if (!process.env.CLIENT_ORIGIN) {
+      console.warn(
+        "⚠️ WARNING: CLIENT_ORIGIN not set. CORS may block frontend."
       );
     }
 
