@@ -13,6 +13,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Show repository structure
+        run: ls -R
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
