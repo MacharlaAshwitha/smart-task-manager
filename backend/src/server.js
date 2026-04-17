@@ -1,63 +1,83 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from 'express';
-import cors from 'cors';
-import connectDB from './config/db.js'; 
+import express from "express";
+import cors from "cors";
+import connectDB from "./config/db.js";
 
-import authRoutes from './routes/authRoutes.js';
-import taskRoutes from './routes/taskRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
-import dashboardRoutes from './routes/dashboardRoutes.js';
-import notificationRoutes from './routes/notificationRoutes.js';
-import activityRoutes from './routes/activityRoutes.js';
-import commentRoutes from './routes/commentRoutes.js';
+import authRoutes from "./routes/authRoutes.js";
+import taskRoutes from "./routes/taskRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+/*
+  ✅ CORS FIX:
+  Allow both local + deployed frontend
+*/
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+    origin: [
+      "http://localhost:5173",
+      "https://macharlaashwitha.github.io"
+    ],
     credentials: true,
   })
 );
+
 app.use(express.json());
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true, service: 'smart-task-manager-api' });
+/*
+  ✅ Health check route
+*/
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, service: "smart-task-manager-api" });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/teams', teamRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/activity', activityRoutes);
-app.use('/api/comments', commentRoutes);
+/*
+  ✅ Routes
+*/
+app.use("/api/auth", authRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/teams", teamRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/activity", activityRoutes);
+app.use("/api/comments", commentRoutes);
 
-// Central error handler (respect status from body-parser JSON errors, etc.)
+/*
+  ✅ Global Error Handler
+*/
 app.use((err, req, res, next) => {
   console.error(err);
   const status = Number(err.statusCode || err.status) || 500;
-  const message = err.message || 'Internal server error';
+  const message = err.message || "Internal server error";
   res.status(status).json({ message });
 });
 
+/*
+  ✅ Start server
+*/
 async function start() {
   try {
     await connectDB();
-    const jwt = process.env.JWT_SECRET;
-    if (!jwt || jwt === 'your_super_secret_jwt_key_change_this') {
+
+    if (!process.env.JWT_SECRET) {
       console.warn(
-        '\n⚠️  Set JWT_SECRET in backend/.env to a long random string (registration/login will fail until you do).\n'
+        "⚠️ WARNING: JWT_SECRET is not set. Auth may fail."
       );
     }
+
     app.listen(PORT, () => {
-      console.log(`API running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (e) {
-    console.error('Failed to start:', e.message);
+    console.error("❌ Failed to start:", e.message);
     process.exit(1);
   }
 }
